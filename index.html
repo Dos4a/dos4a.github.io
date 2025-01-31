@@ -26,40 +26,22 @@
                 video.srcObject = stream;
             })
             .catch(err => {
-                alert('Ошибка доступа к камере: ' + err);
+                Telegram.WebApp.showAlert('Ошибка доступа к камере: ' + err);
             });
 
-        // Сделать фото
+        // Сделать фото и отправить данные боту
         function capturePhoto() {
             const context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Конвертировать в Blob и отправить в бот
-            canvas.toBlob(blob => {
-                const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-                sendPhotoToBot(file);
-            }, 'image/jpeg', 0.9);
-        }
-
-        // Отправить фото боту
-        function sendPhotoToBot(file) {
-            const formData = new FormData();
-            formData.append('photo', file);
-
-            fetch('https://api.telegram.org/bot/sendPhoto?chat_id=' + Telegram.WebApp.initDataUnsafe.user.id, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.ok) {
-                    Telegram.WebApp.close();
-                } else {
-                    alert('Ошибка отправки фото');
-                }
-            });
+            // Конвертируем в Base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Отправляем данные боту через Web App
+            Telegram.WebApp.sendData(imageData);
+            Telegram.WebApp.close();
         }
     </script>
 </body>
