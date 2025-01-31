@@ -48,7 +48,7 @@
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
             // Конвертируем в Base64
-            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            const imageData = canvas.toDataURL('image/jpeg', 0.75);
             
             // Отправляем данные боту через Web App
             Telegram.WebApp.sendData(imageData);
