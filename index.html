@@ -7,12 +7,12 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; padding: 20px; text-align: center; }
-        #camera { width: 100%; max-width: 400px; }
+        #camera { width: 100%; max-width: 400px; transform: scaleX(-1); } /* Зеркальное отображение */
         button { margin: 10px; padding: 10px; }
     </style>
 </head>
 <body>
-    <video id="camera" autoplay></video>
+    <video id="camera" autoplay playsinline></video>
     <button onclick="capturePhoto()">Сделать фото</button>
     <canvas id="canvas" hidden></canvas>
 
@@ -20,22 +20,33 @@
         const video = document.getElementById('camera');
         const canvas = document.getElementById('canvas');
 
-        // Запуск камеры
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                Telegram.WebApp.showAlert('Ошибка доступа к камере: ' + err);
-            });
+        // Запуск задней камеры
+        navigator.mediaDevices.getUserMedia({ 
+            video: {
+                facingMode: 'environment',  // Используем заднюю камеру
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(err => {
+            Telegram.WebApp.showAlert('Ошибка доступа к камере: ' + err);
+        });
 
         // Сделать фото и отправить данные боту
         function capturePhoto() {
             const context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            
+            // Зеркально отражаем изображение
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+            
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+            
             // Конвертируем в Base64
             const imageData = canvas.toDataURL('image/jpeg', 0.9);
             
