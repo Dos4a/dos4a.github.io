@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; text-align: center; }
+        #camera { width: 100%; max-width: 400px; }
+        button { margin: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <video id="camera" autoplay></video>
+    <button onclick="capturePhoto()">Сделать фото</button>
+    <canvas id="canvas" hidden></canvas>
+
+    <script>
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('canvas');
+
+        // Запуск камеры
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert('Ошибка доступа к камере: ' + err);
+            });
+
+        // Сделать фото
+        function capturePhoto() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Конвертировать в Blob и отправить в бот
+            canvas.toBlob(blob => {
+                const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+                sendPhotoToBot(file);
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Отправить фото боту
+        function sendPhotoToBot(file) {
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            fetch('https://api.telegram.org/bot/sendPhoto?chat_id=' + Telegram.WebApp.initDataUnsafe.user.id, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    Telegram.WebApp.close();
+                } else {
+                    alert('Ошибка отправки фото');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
